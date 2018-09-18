@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <mpi.h>
 
 // MAX char table (ASCII)
 #define MAX 256
@@ -80,7 +81,13 @@ void remove_eol(char *line) {
 char *bases;
 char *str;
 
-int main(void) {
+int main(int argc, char** argv) {
+
+	int meu_rank, np, tag = 0;
+    MPI_Status status;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &meu_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &np);
 
 	bases = (char*) malloc(sizeof(char) * 1000001);
 	if (bases == NULL) {
@@ -152,5 +159,6 @@ int main(void) {
 	free(str);
 	free(bases);
 
+	MPI_Finalize();
 	return EXIT_SUCCESS;
 }
