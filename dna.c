@@ -83,81 +83,90 @@ char *str;
 
 int main(int argc, char** argv) {
 
-	int meu_rank, np, tag = 0;
+	int my_rank, np, tag = 0;
     MPI_Status status;
     MPI_Init(&argc, &argv);
-    MPI_Comm_rank(MPI_COMM_WORLD, &meu_rank);
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
-	bases = (char*) malloc(sizeof(char) * 1000001);
-	if (bases == NULL) {
-		perror("malloc");
-		exit(EXIT_FAILURE);
-	}
-	str = (char*) malloc(sizeof(char) * 1000001);
-	if (str == NULL) {
-		perror("malloc str");
-		exit(EXIT_FAILURE);
-	}
+	if (my_rank == 0) {
+		
+		bases = (char*) malloc(sizeof(char) * 1000001);
+		if (bases == NULL) {
+			perror("malloc");
+			exit(EXIT_FAILURE);
+		}
+		str = (char*) malloc(sizeof(char) * 1000001);
+		if (str == NULL) {
+			perror("malloc str");
+			exit(EXIT_FAILURE);
+		}
 
-	openfiles();
+		openfiles();
 
-	char desc_dna[100], desc_query[100];
-	char line[100];
-	int i, found, result;
+		char desc_dna[100], desc_query[100];
+		char line[100];
+		int i, found, result;
 
-	fgets(desc_query, 100, fquery);
-	remove_eol(desc_query);
-	while (!feof(fquery)) {
-		fprintf(fout, "%s\n", desc_query);
-		// read query string
-		fgets(line, 100, fquery);
-		remove_eol(line);
-		str[0] = 0;
-		i = 0;
-		do {
-			strcat(str + i, line);
-			if (fgets(line, 100, fquery) == NULL)
-				break;
+		fgets(desc_query, 100, fquery);
+		remove_eol(desc_query);
+		while (!feof(fquery)) {
+			fprintf(fout, "%s\n", desc_query);
+			// read query string
+			fgets(line, 100, fquery);
 			remove_eol(line);
-			i += 80;
-		} while (line[0] != '>');
-		strcpy(desc_query, line);
-
-		// read database and search
-		found = 0;
-		fseek(fdatabase, 0, SEEK_SET);
-		fgets(line, 100, fdatabase);
-		remove_eol(line);
-		while (!feof(fdatabase)) {
-			strcpy(desc_dna, line);
-			bases[0] = 0;
+			str[0] = 0;
 			i = 0;
-			fgets(line, 100, fdatabase);
-			remove_eol(line);
 			do {
-				strcat(bases + i, line);
-				if (fgets(line, 100, fdatabase) == NULL)
+				strcat(str + i, line);
+				if (fgets(line, 100, fquery) == NULL)
 					break;
 				remove_eol(line);
 				i += 80;
 			} while (line[0] != '>');
+			strcpy(desc_query, line);
 
-			result = bmhs(bases, strlen(bases), str, strlen(str));
-			if (result > 0) {
-				fprintf(fout, "%s\n%d\n", desc_dna, result);
-				found++;
+			// read database and search
+			found = 0;
+			fseek(fdatabase, 0, SEEK_SET);
+			fgets(line, 100, fdatabase);
+			remove_eol(line);
+			while (!feof(fdatabase)) {
+				strcpy(desc_dna, line);
+				bases[0] = 0;
+				i = 0;
+				fgets(line, 100, fdatabase);
+				remove_eol(line);
+				do {
+					strcat(bases + i, line);
+					if (fgets(line, 100, fdatabase) == NULL)
+						break;
+					remove_eol(line);
+					i += 80;
+				} while (line[0] != '>');
+				// Ponto para chamar MPI_SEND
+				result = bmhs(bases, strlen(bases), str, strlen(str));
+				// MPI_Recv
+				if (result > 0) {
+					fprintf(fout, "%s\n%d\n", desc_dna, result);
+					found++;
+				}
 			}
+
+			if (!found)
+				fprintf(fout, "NOT FOUND\n");
 		}
 
-		if (!found)
-			fprintf(fout, "NOT FOUND\n");
+		closefiles();
+
+		free(str);
+		free(bases);
+
 	}
 
-	closefiles();
-
-	free(str);
-	free(bases);
+	else {
+		// do some worker stuff
+	}
 
 	MPI_Finalize();
 	return EXIT_SUCCESS;
