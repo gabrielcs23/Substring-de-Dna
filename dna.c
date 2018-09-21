@@ -83,24 +83,24 @@ char *str;
 
 int main(int argc, char** argv) {
 
-	int my_rank, np, tag = 0;
+	int my_rank, np, tag = 0, len;
     MPI_Status status;
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
+	bases = (char*) malloc(sizeof(char) * 1000001);
+	if (bases == NULL) {
+		perror("malloc");
+		exit(EXIT_FAILURE);
+	}
+	str = (char*) malloc(sizeof(char) * 1000001);
+	if (str == NULL) {
+		perror("malloc str");
+		exit(EXIT_FAILURE);
+	}
+
 	if (my_rank == 0) {
-		
-		bases = (char*) malloc(sizeof(char) * 1000001);
-		if (bases == NULL) {
-			perror("malloc");
-			exit(EXIT_FAILURE);
-		}
-		str = (char*) malloc(sizeof(char) * 1000001);
-		if (str == NULL) {
-			perror("malloc str");
-			exit(EXIT_FAILURE);
-		}
 
 		openfiles();
 
@@ -126,6 +126,11 @@ int main(int argc, char** argv) {
 			} while (line[0] != '>');
 			strcpy(desc_query, line);
 
+			// Ponto para chamar MPI_SEND de todos
+			len = strlen(str);
+			MPI_Send(&len, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
+			MPI_Send(str, strlen(str), MPI_CHAR, 1, 0, MPI_COMM_WORLD);
+
 			// read database and search
 			found = 0;
 			fseek(fdatabase, 0, SEEK_SET);
@@ -144,29 +149,40 @@ int main(int argc, char** argv) {
 					remove_eol(line);
 					i += 80;
 				} while (line[0] != '>');
-				// Ponto para chamar MPI_SEND
-				result = bmhs(bases, strlen(bases), str, strlen(str));
-				// MPI_Recv
+				// Ponto para chamar MPI_SEND de todos
+				len = strlen(bases);
+				MPI_Send(&len, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
+				MPI_Send(bases, strlen(bases), MPI_CHAR, 1, 0, MPI_COMM_WORLD);
+				// MPI_Recv de todos
+				MPI_Recv(&result, 1, MPI_INT, 1, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 				if (result > 0) {
 					fprintf(fout, "%s\n%d\n", desc_dna, result);
 					found++;
 				}
+				break;
 			}
 
 			if (!found)
 				fprintf(fout, "NOT FOUND\n");
+			break;
 		}
 
 		closefiles();
-
-		free(str);
-		free(bases);
 
 	}
 
 	else {
 		// do some worker stuff
+		MPI_Recv(&len, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+		MPI_Recv(str, len, MPI_CHAR, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+		MPI_Recv(&len, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+		MPI_Recv(bases, len, MPI_CHAR, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+		int result = bmhs(bases, strlen(bases), str, strlen(str));
+		MPI_Send(&result, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
 	}
+
+	free(str);
+	free(bases);
 
 	MPI_Finalize();
 	return EXIT_SUCCESS;
