@@ -84,6 +84,7 @@ char *str;
 int main(int argc, char** argv) {
 
 	int my_rank, np, tag = 0, len;
+	int more_query, more_bases; // Variável que controla se o master mandará mais carga aos trabalhadores
     MPI_Status status;
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -111,6 +112,8 @@ int main(int argc, char** argv) {
 		fgets(desc_query, 100, fquery);
 		remove_eol(desc_query);
 		while (!feof(fquery)) {
+			more_query = 1;
+			MPI_Send(&more_query, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
 			fprintf(fout, "%s\n", desc_query);
 			// read query string
 			fgets(line, 100, fquery);
@@ -137,6 +140,8 @@ int main(int argc, char** argv) {
 			fgets(line, 100, fdatabase);
 			remove_eol(line);
 			while (!feof(fdatabase)) {
+				more_bases = 1;
+				MPI_Send(&more_bases, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
 				strcpy(desc_dna, line);
 				bases[0] = 0;
 				i = 0;
@@ -159,26 +164,37 @@ int main(int argc, char** argv) {
 					fprintf(fout, "%s\n%d\n", desc_dna, result);
 					found++;
 				}
-				break;
 			}
+			more_bases = 0;
+			MPI_Send(&more_bases, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
 
 			if (!found)
 				fprintf(fout, "NOT FOUND\n");
-			break;
 		}
+		more_query = 0;
+		MPI_Send(&more_query, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
 
 		closefiles();
 
 	}
 
 	else {
-		// do some worker stuff
-		MPI_Recv(&len, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-		MPI_Recv(str, len, MPI_CHAR, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-		MPI_Recv(&len, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-		MPI_Recv(bases, len, MPI_CHAR, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-		int result = bmhs(bases, strlen(bases), str, strlen(str));
-		MPI_Send(&result, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+		// sempre verifica se o mestre enviará mais carga
+		MPI_Recv(&more_query, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+		while(more_query){
+			MPI_Recv(&len, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+			MPI_Recv(str, len, MPI_CHAR, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+			// sempre verifica se o mestre enviará mais carga
+			MPI_Recv(&more_bases, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+			while(more_bases){
+				MPI_Recv(&len, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+				MPI_Recv(bases, len, MPI_CHAR, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+				int result = bmhs(bases, strlen(bases), str, strlen(str));
+				MPI_Send(&result, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
+				MPI_Recv(&more_bases, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+			}
+			MPI_Recv(&more_query, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+		}
 	}
 
 	free(str);
