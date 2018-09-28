@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mpi.h>
-
+#include <limits.h>
 // MAX char table (ASCII)
 #define MAX 256
 
@@ -82,7 +82,7 @@ char *bases;
 char *str;
 
 int main(int argc, char** argv) {
-
+	int lowest_result = INT_MAX;
 	int my_rank, np, tag = 0, len;
 	int more_query, more_bases; // Variável que controla se o master mandará mais carga aos trabalhadores
     MPI_Status status;
@@ -117,6 +117,7 @@ int main(int argc, char** argv) {
 			fprintf(fout, "%s\n", desc_query);
 			// read query string
 			fgets(line, 100, fquery);
+			lowest_result = INT_MAX;
 			remove_eol(line);
 			str[0] = 0;
 			i = 0;
@@ -130,9 +131,10 @@ int main(int argc, char** argv) {
 			strcpy(desc_query, line);
 
 			// Ponto para chamar MPI_SEND de todos
-			len = strlen(str);
+			len = strlen(str) +1;
 			MPI_Send(&len, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
-			MPI_Send(str, strlen(str), MPI_CHAR, 1, 0, MPI_COMM_WORLD);
+			printf("QUERY ATUAL: %s\n", str);
+			MPI_Send(str, strlen(str)+1, MPI_CHAR, 1, 0, MPI_COMM_WORLD);
 
 			// read database and search
 			found = 0;
@@ -160,10 +162,11 @@ int main(int argc, char** argv) {
 				MPI_Send(bases, strlen(bases), MPI_CHAR, 1, 0, MPI_COMM_WORLD);
 				// MPI_Recv de todos
 				MPI_Recv(&result, 1, MPI_INT, 1, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-				if (result > 0) {
-					fprintf(fout, "%s\n%d\n", desc_dna, result);
-					found++;
-				}
+				if ((result < lowest_result) && (result > 0)){
+						lowest_result = result;
+						fprintf(fout, "%s\n%d\n", desc_dna, lowest_result);
+						found++;
+					}
 			}
 			more_bases = 0;
 			MPI_Send(&more_bases, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
@@ -184,12 +187,14 @@ int main(int argc, char** argv) {
 		while(more_query){
 			MPI_Recv(&len, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 			MPI_Recv(str, len, MPI_CHAR, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+			printf("QUERY RECEBIDO: %s\n", str);
 			// sempre verifica se o mestre enviará mais carga
 			MPI_Recv(&more_bases, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 			while(more_bases){
 				MPI_Recv(&len, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 				MPI_Recv(bases, len, MPI_CHAR, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 				int result = bmhs(bases, strlen(bases), str, strlen(str));
+				printf("result = %d",result);
 				MPI_Send(&result, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
 				MPI_Recv(&more_bases, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 			}
