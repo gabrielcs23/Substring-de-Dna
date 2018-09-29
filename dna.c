@@ -32,8 +32,39 @@ int bmhs(char *string, int n, char *substr, int m) {
 		i = i + d[(int) string[i + 1]];
 	}
 
+	/*for (i = n-m; i < n; i++){
+		int match = 0;
+		j = i;
+		k = 0;
+		while (j < n && k < m && string[j] == substr[k]) {
+			match++;
+			j++;
+			k++;
+		}
+		if (j == n && k == m) return (match * -1);
+	}*/
+
 	return -1;
 }
+
+int search(char *string, int n, char *substr, int m) {
+
+	int answer = bmhs(string, n, substr, m);
+
+	if (answer > -1) return answer;
+
+	int i;
+	/*for (i = 1; i < n; i++) {
+		answer = bmhs(string[m-n+i], n-i, substr[i], n-i);
+	}*/
+	for (i = n-1; i > 0; i--) {
+		answer = bmhs(string + m-i, i, substr + n-i, i);
+		if (answer > -1) return answer * -1;
+	}
+
+	return INT_MIN;
+}
+
 
 FILE *fdatabase, *fquery, *fout;
 
@@ -88,7 +119,6 @@ int main(int argc, char** argv) {
 	int const TAG_DNA = 4;
 	
 	
-	int lowest_result = INT_MAX;
 	int my_rank, np, tag = 0, len;
 	int more_query, more_bases; // Variável que controla se o master mandará mais carga aos trabalhadores
     MPI_Status status;
@@ -133,7 +163,6 @@ int main(int argc, char** argv) {
 			fprintf(fout, "%s\n", desc_query);
 			// read query string
 			fgets(line, 100, fquery);
-			lowest_result = INT_MAX;
 			remove_eol(line);
 			str[0] = 0;
 			i = 0;
@@ -180,9 +209,8 @@ int main(int argc, char** argv) {
 				MPI_Send(bases, strlen(bases), MPI_CHAR, 1, 0, MPI_COMM_WORLD);
 				// MPI_Recv de todos
 				MPI_Recv(&result, 1, MPI_INT, 1, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-				if ((result < lowest_result) && (result > 0)){
-						lowest_result = result;
-						fprintf(fout, "%s\n%d\n", desc_dna, lowest_result);
+				if (result >= 0) {
+						fprintf(fout, "%s\n%d\n", desc_dna, result);
 						found++;
 					}
 			}
@@ -219,7 +247,7 @@ int main(int argc, char** argv) {
 						if (my_rank == 1){
 							MPI_Recv(&len, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 							MPI_Recv(bases, len, MPI_CHAR, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-							int result = bmhs(bases, strlen(bases), str, strlen(str));
+							int result = search(bases, strlen(bases), str, strlen(str));
 						
 							MPI_Send(&result, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
 						}
