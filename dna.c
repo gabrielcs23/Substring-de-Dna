@@ -113,11 +113,11 @@ char *bases;
 char *str;
 
 int main(int argc, char** argv) {
-	int const TAG_CARGA = 1;
+	//int const TAG_CARGA = 1;
 	int const TAG_SIZE = 2;
 	int const TAG_QUERY = 3;
 	int const TAG_DNA = 4;
-	
+	int const TAG_ANSWER = 5;
 	
 	int my_rank, np, tag = 0, len;
 	int more_query, more_bases; // Variável que controla se o master mandará mais carga aos trabalhadores
@@ -136,15 +136,15 @@ int main(int argc, char** argv) {
 		perror("malloc str");
 		exit(EXIT_FAILURE);
 	}
-	int part_size = strlen(bases)/np;
-	int resto;
+	int part_size = strlen(bases)/(np - 1);
+	int resto = strlen(bases)%(np - 1);
 	
 	if(part_size > 80){
 		resto = (part_size - 80) * np;
 		part_size = 80;
 	}
 	
-	char dna_split[part_size];
+	//char dna_split[part_size];
 	if (my_rank == 0) {
 
 		openfiles();
@@ -157,8 +157,8 @@ int main(int argc, char** argv) {
 		remove_eol(desc_query);
 		while (!feof(fquery)) {
 			more_query = 1;
-			for (i = 1; i < np; i++)
-				MPI_Send(&more_query, 1, MPI_INT, i, TAG_CARGA, MPI_COMM_WORLD);
+
+			MPI_Bcast(&more_query, 1, MPI_INT, 0, MPI_COMM_WORLD);
 			
 			fprintf(fout, "%s\n", desc_query);
 			// read query string
@@ -180,7 +180,7 @@ int main(int argc, char** argv) {
 			for(i = 1; i< np; i++ ){
 				MPI_Send(&len, 1, MPI_INT, i, TAG_SIZE, MPI_COMM_WORLD);
 				//printf("QUERY ATUAL: %s\n", str);
-				MPI_Send(str, strlen(str)+1, MPI_CHAR, i, TAG_QUERY, MPI_COMM_WORLD);
+				MPI_Send(str, len, MPI_CHAR, i, TAG_QUERY, MPI_COMM_WORLD);
 			}
 			// read database and search
 			found = 0;
@@ -189,8 +189,9 @@ int main(int argc, char** argv) {
 			remove_eol(line);
 			while (!feof(fdatabase)) {
 				more_bases = 1;
-				for (i = 1; i < np; i++)
-					MPI_Send(&more_bases, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
+
+				MPI_Bcast(&more_bases, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
 				strcpy(desc_dna, line);
 				bases[0] = 0;
 				i = 0;
@@ -203,27 +204,32 @@ int main(int argc, char** argv) {
 					remove_eol(line);
 					i += 80;
 				} while (line[0] != '>');
-				// Ponto para chamar MPI_SEND de todos
+				// Ponto para chamar MPI_SEND de todos (TODO Scatter)
 				len = strlen(bases);
-				MPI_Send(&len, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
-				MPI_Send(bases, strlen(bases), MPI_CHAR, 1, 0, MPI_COMM_WORLD);
+				for (i = 1;i < np; i++) {
+					MPI_Send(&len, 1, MPI_INT, i, TAG_SIZE, MPI_COMM_WORLD);
+					MPI_Send(bases, len, MPI_CHAR, i, TAG_DNA, MPI_COMM_WORLD);
+				}
 				// MPI_Recv de todos
-				MPI_Recv(&result, 1, MPI_INT, 1, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-				if (result >= 0) {
-						fprintf(fout, "%s\n%d\n", desc_dna, result);
-						found++;
-					}
+				for (i = 1; i < np; i++) {
+					MPI_Recv(&result, 1, MPI_INT, i, TAG_ANSWER, MPI_COMM_WORLD, &status);
+					if (result >= 0) {
+							fprintf(fout, "%s\n%d\n", desc_dna, result);
+							found++;
+						}
+				}
 			}
 			more_bases = 0;
-			for (i = 1; i < np; i++)
-				MPI_Send(&more_bases, 1, MPI_INT, i, 0, MPI_COMM_WORLD);
+
+			MPI_Bcast(&more_bases, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
 
 			if (!found)
 				fprintf(fout, "NOT FOUND\n");
 		}
 		more_query = 0;
-		for (i = 1; i<np; i++)
-			MPI_Send(&more_query, 1, MPI_INT, i, TAG_CARGA, MPI_COMM_WORLD);
+
+		MPI_Bcast(&more_query, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
 		closefiles();
 
@@ -231,7 +237,7 @@ int main(int argc, char** argv) {
 
 	else {
 		// sempre verifica se o mestre enviará mais carga
-		MPI_Recv(&more_query, 1, MPI_INT, 0, TAG_CARGA, MPI_COMM_WORLD, &status);
+		MPI_Bcast(&more_query, 1, MPI_INT, 0, MPI_COMM_WORLD);
 		
 			while(more_query){
 				MPI_Recv(&len, 1, MPI_INT, 0, TAG_SIZE, MPI_COMM_WORLD, &status);
@@ -240,21 +246,22 @@ int main(int argc, char** argv) {
 				//printf("QUERY RECEBIDO: %s\n", str);
 				// sempre verifica se o mestre enviará mais carga
 				
-				MPI_Recv(&more_bases, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+				MPI_Bcast(&more_bases, 1, MPI_INT, 0, MPI_COMM_WORLD);
 				
 				//printf("%d sabe que tem mais carga  de dna\n", my_rank);
 					while(more_bases){
-						if (my_rank == 1){
-							MPI_Recv(&len, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-							MPI_Recv(bases, len, MPI_CHAR, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-							int result = search(bases, strlen(bases), str, strlen(str));
-						
-							MPI_Send(&result, 1, MPI_INT, 0, 0, MPI_COMM_WORLD);
-						}
-						MPI_Recv(&more_bases, 1, MPI_INT, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-						
+						//if (my_rank == 1){
+						MPI_Recv(&len, 1, MPI_INT, 0, TAG_SIZE, MPI_COMM_WORLD, &status);
+						MPI_Recv(bases, len, MPI_CHAR, 0, TAG_DNA, MPI_COMM_WORLD, &status);
+						//printf("%d - Recebeu base de tamanho %d: %s\n", my_rank, len, bases);
+						int result = search(bases, strlen(bases), str, strlen(str));
+					
+						MPI_Send(&result, 1, MPI_INT, 0, TAG_ANSWER, MPI_COMM_WORLD);
+						//}
+						MPI_Bcast(&more_bases, 1, MPI_INT, 0, MPI_COMM_WORLD);
 					}
-				MPI_Recv(&more_query, 1, MPI_INT, 0, TAG_CARGA, MPI_COMM_WORLD, &status);
+
+				MPI_Bcast(&more_query, 1, MPI_INT, 0, MPI_COMM_WORLD);
 			}
 	}
 
