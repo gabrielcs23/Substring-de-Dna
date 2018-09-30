@@ -35,21 +35,6 @@ int bmhs(char *string, int n, char *substr, int m) {
 	return -1;
 }
 
-int search(char *string, int n, char *substr, int m) {
-
-	int answer = bmhs(string, n, substr, m);
-
-	if (answer > -1) return answer;
-
-	int i;
-
-	for (i = n-1; i > 0; i--) {
-		answer = bmhs(string + m-i, i, substr + n-i, i);
-		if (answer > -1) return answer * -1;
-	}
-
-	return INT_MIN;
-}
 
 
 FILE *fdatabase, *fquery, *fout;
@@ -95,27 +80,27 @@ void remove_eol(char *line) {
 	}
 }
 
-int min(int a, int b) {
-	if (a < b)
-		return a;
-	else return b;
-}
+int min(int a, int b) {						//
+	if (a < b)								//
+		return a;							//
+	else return b;							// Função  básica de min comparativa
+}											
 
 char *bases;
 char *str;
 
-int main(int argc, char** argv) {
-	//int const TAG_CARGA = 1;
-	int const TAG_SIZE = 2;
-	int const TAG_QUERY = 3;
-	int const TAG_DNA = 4;
-	int const TAG_ANSWER = 5;
+int main(int argc, char** argv) 
+
+	int const TAG_SIZE = 2;					//
+	int const TAG_QUERY = 3;				//
+	int const TAG_DNA = 4;					//
+	int const TAG_ANSWER = 5;				// Tags para envios de mensagens
 	
-	int my_rank, np, tag = 0, len;
-	int result, resultMin = INT_MAX;
-	int more_query, more_bases; // Variável que controla se o master mandará mais carga aos trabalhadores
-    MPI_Status status;
-    MPI_Init(&argc, &argv);
+	int my_rank, np, tag = 0, len;			
+	int result, resultMin = INT_MAX;			// Começa com uma variável de resultado no INT_MAX
+	int more_query, more_bases; 				// Variável que controla se o master mandará mais carga aos trabalhadores
+    MPI_Status status;							
+    MPI_Init(&argc, &argv);						
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
@@ -130,9 +115,10 @@ int main(int argc, char** argv) {
 		exit(EXIT_FAILURE);
 	}
 	
-	if (my_rank == 0) {
+	// ----------------------------- Escopo das ações dos mestres ---------------------------
+	if (my_rank == 0) {						
 
-		openfiles();
+		openfiles();														
 
 		char desc_dna[100], desc_query[100];
 		char line[100];
@@ -141,127 +127,131 @@ int main(int argc, char** argv) {
 		fgets(desc_query, 100, fquery);
 		remove_eol(desc_query);
 		while (!feof(fquery)) {
-			more_query = 1;
-
-			MPI_Bcast(&more_query, 1, MPI_INT, 0, MPI_COMM_WORLD);
+			more_query = 1;												// Envia uma flag sinalizando para os processos
+			MPI_Bcast(&more_query, 1, MPI_INT, 0, MPI_COMM_WORLD);		// se vão receber mais substrings ou não
 			
-			fprintf(fout, "%s\n", desc_query);
-			// read query string
-			fgets(line, 100, fquery);
-			remove_eol(line);
-			str[0] = 0;
-			i = 0;
-			do {
-				strcat(str + i, line);
-				if (fgets(line, 100, fquery) == NULL)
-					break;
-				remove_eol(line);
-				i += 80;
-			} while (line[0] != '>');
-			strcpy(desc_query, line);
+			fprintf(fout, "%s\n", desc_query);							// Lê e salva a descrição da query atualno arquivo de saída
+			fgets(line, 100, fquery);									// Começa a lê a query
+			remove_eol(line);											
+			str[0] = 0;													
+			i = 0;														
+			do {														//
+				strcat(str + i, line);									//
+				if (fgets(line, 100, fquery) == NULL)					//
+					break;												//
+				remove_eol(line);										//
+				i += 80;												//
+			} while (line[0] != '>');									// Armazena o query em str e salva a 
+			strcpy(desc_query, line);									// descrição do próximo query
 
 			// Ponto para chamar MPI_SEND de todos
-			len = strlen(str) +1;
-			for(i = 1; i< np; i++ ){
-				MPI_Send(&len, 1, MPI_INT, i, TAG_SIZE, MPI_COMM_WORLD);
-				MPI_Send(str, len, MPI_CHAR, i, TAG_QUERY, MPI_COMM_WORLD);
-			}
-			// read database and search
-			found = 0;
-			fseek(fdatabase, 0, SEEK_SET);
-			fgets(line, 100, fdatabase);
+			len = strlen(str) +1;												// len + 1 para inclusão do '\0' do final da query
+			for(i = 1; i< np; i++ ){											// 
+				MPI_Send(&len, 1, MPI_INT, i, TAG_SIZE, MPI_COMM_WORLD);		// Envia o tamanho da query a ser recebida
+				MPI_Send(str, len, MPI_CHAR, i, TAG_QUERY, MPI_COMM_WORLD);		// por todos os processos e depois as próprias queries
+			}																	//
+			
+			found = 0;															//
+			fseek(fdatabase, 0, SEEK_SET);										//
+			fgets(line, 100, fdatabase);										// Leitura da base de dados
 			remove_eol(line);
 			while (!feof(fdatabase)) {
-				more_bases = 1;
-
-				MPI_Bcast(&more_bases, 1, MPI_INT, 0, MPI_COMM_WORLD);
+				more_bases = 1;													// Avisa para todos os outros processos que 
+				MPI_Bcast(&more_bases, 1, MPI_INT, 0, MPI_COMM_WORLD);			// ainda há bases de DNA para receberem
 
 				strcpy(desc_dna, line);
 				bases[0] = 0;
 				i = 0;
 				fgets(line, 100, fdatabase);
 				remove_eol(line);
-				do {
-					strcat(bases + i, line);
-					if (fgets(line, 100, fdatabase) == NULL)
-						break;
-					remove_eol(line);
-					i += 80;
-				} while (line[0] != '>');
-				// Ponto para chamar MPI_SEND de todos
-				int part_size = strlen(bases)/np;
-				int resto = strlen(bases)%np;
-				for (i = 1;i < np; i++) {
-					len = part_size + strlen(str) - 1;
-					if (i < resto) len++;
-					int offset = i < resto ? i : resto;
-					MPI_Send(&len, 1, MPI_INT, i, TAG_SIZE, MPI_COMM_WORLD);
-					MPI_Send(&bases[(i * part_size) + offset], len, MPI_CHAR, i, TAG_DNA, MPI_COMM_WORLD);
-				}
-				result = bmhs(&bases[0], part_size + (resto>0?1:0) + strlen(str) - 1, str, strlen(str));
-				if (result >= 0)
-					resultMin = min(result, resultMin);
-				int result_temp;
-				// MPI_Recv de todos
-				for (i = 1; i < np; i++) {
-					MPI_Recv(&result_temp, 1, MPI_INT, i, TAG_ANSWER, MPI_COMM_WORLD, &status);
-					if (result_temp >= 0){
-						result_temp += i * part_size;
-						if (i < resto) result_temp += i;
-						else result_temp += resto;
-						resultMin = min(result_temp, resultMin);
+				do {															//
+					strcat(bases + i, line);									//
+					if (fgets(line, 100, fdatabase) == NULL)					//
+						break;													// Lê do arquivo dna.in a base e armazena
+					remove_eol(line);											// a sequência em bases, em seguida guarda a
+					i += 80;													// descrição da próxima sequência
+				} while (line[0] != '>');										//
+				
+				int part_size = strlen(bases)/np;								// define o tamanho das parcelas de cada processo
+				int resto = strlen(bases)%np;									// e salva o resto para balanceamento de carga
+				
+				for (i = 1;i < np; i++) {										// Para cada processo, o mestre
+					len = part_size + strlen(str) - 1;							// verifica se i é cadidato ao balanceamento,
+					if (i < resto) len++;										// se for, ele enviará o tamanho da partição 
+					int offset = i < resto ? i : resto;							// ajustada para balanceamento e também a partição
+					MPI_Send(&len, 1, MPI_INT, i, TAG_SIZE, MPI_COMM_WORLD);	// da sequencia de DNA referente para aquele processo
+					MPI_Send(&bases[(i * part_size) + offset], len, MPI_CHAR,	// O offset garante integridade do deslocamento no 
+					 i, TAG_DNA, MPI_COMM_WORLD);								// balanceamento de carga
+				}																
+				result = bmhs(&bases[0], part_size + (resto>0?1:0) + strlen(str) - 1, str, strlen(str));	// Chama a função bhms para a partição do mestre
+				
+				if (result >= 0)												// Se a função retorna uma posição,
+					resultMin = min(result, resultMin);							// verifica se ela é menor que um resultado já achado
+				int result_temp;												// anteriormente
+				
+
+				for (i = 1; i < np; i++) {																// O mestre então recebe de cada processo
+					MPI_Recv(&result_temp, 1, MPI_INT, i, TAG_ANSWER, MPI_COMM_WORLD, &status);			// resultado na posição relativa, e então
+					if (result_temp >= 0){																// calcula a posição absoluta
+						result_temp += i * part_size;													// 
+						if (i < resto) result_temp += i;												// 
+						else result_temp += resto;														// Ajusta o valor da posição por conta do balanceamento
+						resultMin = min(result_temp, resultMin);										// Compara o resultado atual com o menor já achado
 					}
 				}
-				if (resultMin != INT_MAX) {
-					fprintf(fout, "%s\n%d\n", desc_dna, resultMin);
-					found++;
-				}
-				resultMin = INT_MAX;
+				if (resultMin != INT_MAX) {										// Se o resultado no final != INT_MAX, significa
+					fprintf(fout, "%s\n%d\n", desc_dna, resultMin);				// achou a posição, então o mestre
+					found++;													// salva a resposta no arquivo de saída
+				}																
+				resultMin = INT_MAX;											// Reseta o valor do resultado para a próxima base.
 			}
-			more_bases = 0;
 
-			MPI_Bcast(&more_bases, 1, MPI_INT, 0, MPI_COMM_WORLD);
+			more_bases = 0;														// Quando acaba as bases, envia um sinal para todos
+			MPI_Bcast(&more_bases, 1, MPI_INT, 0, MPI_COMM_WORLD);				// indicando que não há mais para receber
 
 
 			if (!found)
 				fprintf(fout, "NOT FOUND\n");
 		}
-		more_query = 0;
-
-		MPI_Bcast(&more_query, 1, MPI_INT, 0, MPI_COMM_WORLD);
+		more_query = 0;															// Quado acabam as queries, avisa para todos
+		MPI_Bcast(&more_query, 1, MPI_INT, 0, MPI_COMM_WORLD);					// que não há mais queries para receberem
 
 		closefiles();
 
 	}
 
-	else {
-		// sempre verifica se o mestre enviará mais carga
-		MPI_Bcast(&more_query, 1, MPI_INT, 0, MPI_COMM_WORLD);
-		
-			while(more_query){
-				MPI_Recv(&len, 1, MPI_INT, 0, TAG_SIZE, MPI_COMM_WORLD, &status);
-				MPI_Recv(str, len, MPI_CHAR, 0, TAG_QUERY, MPI_COMM_WORLD, &status);
 
-				// sempre verifica se o mestre enviará mais carga
-				MPI_Bcast(&more_bases, 1, MPI_INT, 0, MPI_COMM_WORLD);
+// ----------------------------- Escopo dos outros processos -----------------------------------
+	else {
+		
+		MPI_Bcast(&more_query, 1, MPI_INT, 0, MPI_COMM_WORLD);							// Verifica se o mestre enviará mais query
+			
+			while(more_query){															// Enquanto houverem queries
+
+				MPI_Recv(&len, 1, MPI_INT, 0, TAG_SIZE, MPI_COMM_WORLD, &status);		// Recebe o tamanho da query atual
+				MPI_Recv(str, len, MPI_CHAR, 0, TAG_QUERY, MPI_COMM_WORLD, &status);	// e a query em si
+
 				
-				while(more_bases){
-					MPI_Recv(&len, 1, MPI_INT, 0, TAG_SIZE, MPI_COMM_WORLD, &status);
-					MPI_Recv(bases, len, MPI_CHAR, 0, TAG_DNA, MPI_COMM_WORLD, &status);
-					bases[len] = '\0';
-					result = bmhs(bases, strlen(bases), str, strlen(str));
+				MPI_Bcast(&more_bases, 1, MPI_INT, 0, MPI_COMM_WORLD);					// Verifica se o mestre enviará mais bases
+										
+				while(more_bases){														// Enquanto houverem bases
+
+					MPI_Recv(&len, 1, MPI_INT, 0, TAG_SIZE, MPI_COMM_WORLD, &status);	// Recebe o tamanho da base  
+					MPI_Recv(bases, len, MPI_CHAR, 0, TAG_DNA, MPI_COMM_WORLD, &status);// e a base em si
+					bases[len] = '\0';		
+					result = bmhs(bases, strlen(bases), str, strlen(str));				// Calcula a posição relativa da substring para esse processo
 				
-					MPI_Send(&result, 1, MPI_INT, 0, TAG_ANSWER, MPI_COMM_WORLD);
-					MPI_Bcast(&more_bases, 1, MPI_INT, 0, MPI_COMM_WORLD);
+					MPI_Send(&result, 1, MPI_INT, 0, TAG_ANSWER, MPI_COMM_WORLD);		// Envia o resultado de volta para o mestre
+					MPI_Bcast(&more_bases, 1, MPI_INT, 0, MPI_COMM_WORLD);				// Verifica novamente se há mais bases para receber
 				}
 
-				MPI_Bcast(&more_query, 1, MPI_INT, 0, MPI_COMM_WORLD);
+				MPI_Bcast(&more_query, 1, MPI_INT, 0, MPI_COMM_WORLD);					// Verifica novamente se há mais queries para receber
 			}
 	}
 
-	free(str);
-	free(bases);
+	free(str);				//
+	free(bases);			// Libera memória
 
-	MPI_Finalize();
+	MPI_Finalize();			// Finaliza MPI
 	return EXIT_SUCCESS;
 }
