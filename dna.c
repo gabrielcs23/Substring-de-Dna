@@ -143,13 +143,6 @@ int main(int argc, char** argv) {
 		perror("malloc str");
 		exit(EXIT_FAILURE);
 	}
-	int part_size = strlen(bases)/(np - 1);
-	int resto = strlen(bases)%(np - 1);
-	
-	if(part_size > 80){
-		resto = (part_size - 80) * np;
-		part_size = 80;
-	}
 	
 	//char dna_split[part_size];
 	if (my_rank == 0) {
@@ -212,13 +205,22 @@ int main(int argc, char** argv) {
 					i += 80;
 				} while (line[0] != '>');
 				// Ponto para chamar MPI_SEND de todos (TODO Scatter)
-				len = (strlen(bases) + 1) / np;
+				/*len = (strlen(bases) + 1) / np;
 				len += strlen(str) - 1;
 				for (i = 1;i < np; i++) {
 					MPI_Send(&len, 1, MPI_INT, i, TAG_SIZE, MPI_COMM_WORLD);
 					MPI_Send(&bases[i * len], len, MPI_CHAR, i, TAG_DNA, MPI_COMM_WORLD);
+				}*/
+				int part_size = strlen(bases)/np;
+				int resto = strlen(bases)%np;
+				for (i = 1;i < np; i++) {
+					len = part_size;
+					if (i < resto) len++;
+					int offset = i < resto ? i : resto;
+					MPI_Send(&len, 1, MPI_INT, i, TAG_SIZE, MPI_COMM_WORLD);
+					MPI_Send(&bases[(i * part_size) + offset], len, MPI_CHAR, i, TAG_DNA, MPI_COMM_WORLD);
 				}
-				result = bmhs(&bases[0], len, str, strlen(str));
+				result = bmhs(&bases[0], part_size + (resto>0?1:0), str, strlen(str));
 				if (result >= 0)
 					resultMin = min(result, resultMin);
 				int result_temp;
@@ -226,7 +228,9 @@ int main(int argc, char** argv) {
 				for (i = 1; i < np; i++) {
 					MPI_Recv(&result_temp, 1, MPI_INT, i, TAG_ANSWER, MPI_COMM_WORLD, &status);
 					if (result_temp >= 0){
-						result_temp += (i*len);
+						result_temp += i * part_size;
+						if (i < resto) result_temp += i;
+						else result_temp += resto;
 						resultMin = min(result_temp, resultMin);
 					}
 				}
@@ -270,7 +274,8 @@ int main(int argc, char** argv) {
 						//if (my_rank == 1){
 						MPI_Recv(&len, 1, MPI_INT, 0, TAG_SIZE, MPI_COMM_WORLD, &status);
 						MPI_Recv(bases, len, MPI_CHAR, 0, TAG_DNA, MPI_COMM_WORLD, &status);
-						//printf("%d - Recebeu base de tamanho %d: %s\n", my_rank, len, bases);
+						bases[len] = '\0';
+						printf("%d - Recebeu base de tamanho %d: %s\n", my_rank, len, bases);
 						result = bmhs(bases, strlen(bases), str, strlen(str));
 					
 						MPI_Send(&result, 1, MPI_INT, 0, TAG_ANSWER, MPI_COMM_WORLD);
