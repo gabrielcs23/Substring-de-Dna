@@ -214,7 +214,7 @@ int main(int argc, char** argv) {
 				int part_size = strlen(bases)/np;
 				int resto = strlen(bases)%np;
 				for (i = 1;i < np; i++) {
-					len = part_size;
+					len = part_size + strlen(str) - 1;
 					if (i < resto) len++;
 					int offset = i < resto ? i : resto;
 					MPI_Send(&len, 1, MPI_INT, i, TAG_SIZE, MPI_COMM_WORLD);
@@ -227,6 +227,7 @@ int main(int argc, char** argv) {
 				// MPI_Recv de todos
 				for (i = 1; i < np; i++) {
 					MPI_Recv(&result_temp, 1, MPI_INT, i, TAG_ANSWER, MPI_COMM_WORLD, &status);
+					printf("%d - processou de %d ate %d, com resultado = %d\n", i, (i * part_size) + (i < resto ? i : resto), (i * part_size) + (i < resto ? i : resto) + part_size + (i < resto ? 1 : 0), result_temp);
 					if (result_temp >= 0){
 						result_temp += i * part_size;
 						if (i < resto) result_temp += i;
@@ -275,7 +276,7 @@ int main(int argc, char** argv) {
 						MPI_Recv(&len, 1, MPI_INT, 0, TAG_SIZE, MPI_COMM_WORLD, &status);
 						MPI_Recv(bases, len, MPI_CHAR, 0, TAG_DNA, MPI_COMM_WORLD, &status);
 						bases[len] = '\0';
-						printf("%d - Recebeu base de tamanho %d: %s\n", my_rank, len, bases);
+						//printf("%d - Recebeu base de tamanho %d: %s\n", my_rank, len, bases);
 						result = bmhs(bases, strlen(bases), str, strlen(str));
 					
 						MPI_Send(&result, 1, MPI_INT, 0, TAG_ANSWER, MPI_COMM_WORLD);
