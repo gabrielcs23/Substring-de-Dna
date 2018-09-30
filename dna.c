@@ -225,8 +225,10 @@ int main(int argc, char** argv) {
 				// MPI_Recv de todos
 				for (i = 1; i < np; i++) {
 					MPI_Recv(&result_temp, 1, MPI_INT, i, TAG_ANSWER, MPI_COMM_WORLD, &status);
-					if (result_temp >= 0)
+					if (result_temp >= 0){
+						result_temp += (i*len);
 						resultMin = min(result_temp, resultMin);
+					}
 				}
 				if (resultMin != INT_MAX) {
 					fprintf(fout, "%s\n%d\n", desc_dna, resultMin);
