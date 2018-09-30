@@ -109,6 +109,12 @@ void remove_eol(char *line) {
 	}
 }
 
+int min(int a, int b) {
+	if (a < b)
+		return a;
+	else return b;
+}
+
 char *bases;
 char *str;
 
@@ -120,6 +126,7 @@ int main(int argc, char** argv) {
 	int const TAG_ANSWER = 5;
 	
 	int my_rank, np, tag = 0, len;
+	int result, resultMin = INT_MAX;
 	int more_query, more_bases; // Variável que controla se o master mandará mais carga aos trabalhadores
     MPI_Status status;
     MPI_Init(&argc, &argv);
@@ -151,7 +158,7 @@ int main(int argc, char** argv) {
 
 		char desc_dna[100], desc_query[100];
 		char line[100];
-		int i, found, result;
+		int i, found;
 
 		fgets(desc_query, 100, fquery);
 		remove_eol(desc_query);
@@ -213,11 +220,14 @@ int main(int argc, char** argv) {
 				// MPI_Recv de todos
 				for (i = 1; i < np; i++) {
 					MPI_Recv(&result, 1, MPI_INT, i, TAG_ANSWER, MPI_COMM_WORLD, &status);
-					if (result >= 0) {
-							fprintf(fout, "%s\n%d\n", desc_dna, result);
-							found++;
-						}
+					if (result >= 0)
+						resultMin = min(result, resultMin);
 				}
+				if (resultMin != INT_MAX) {
+					fprintf(fout, "%s\n%d\n", desc_dna, resultMin);
+					found++;
+				}
+				resultMin = INT_MAX;
 			}
 			more_bases = 0;
 
@@ -254,7 +264,7 @@ int main(int argc, char** argv) {
 						MPI_Recv(&len, 1, MPI_INT, 0, TAG_SIZE, MPI_COMM_WORLD, &status);
 						MPI_Recv(bases, len, MPI_CHAR, 0, TAG_DNA, MPI_COMM_WORLD, &status);
 						//printf("%d - Recebeu base de tamanho %d: %s\n", my_rank, len, bases);
-						int result = search(bases, strlen(bases), str, strlen(str));
+						result = search(bases, strlen(bases), str, strlen(str));
 					
 						MPI_Send(&result, 1, MPI_INT, 0, TAG_ANSWER, MPI_COMM_WORLD);
 						//}
