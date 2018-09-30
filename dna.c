@@ -89,7 +89,7 @@ int min(int a, int b) {						//
 char *bases;
 char *str;
 
-int main(int argc, char** argv) 
+int main(int argc, char** argv){
 
 	int const TAG_SIZE = 2;					//
 	int const TAG_QUERY = 3;				//
