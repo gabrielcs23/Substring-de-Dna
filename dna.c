@@ -212,16 +212,21 @@ int main(int argc, char** argv) {
 					i += 80;
 				} while (line[0] != '>');
 				// Ponto para chamar MPI_SEND de todos (TODO Scatter)
-				len = strlen(bases);
+				len = (strlen(bases) + 1) / np;
+				len += strlen(str) - 1;
 				for (i = 1;i < np; i++) {
 					MPI_Send(&len, 1, MPI_INT, i, TAG_SIZE, MPI_COMM_WORLD);
-					MPI_Send(bases, len, MPI_CHAR, i, TAG_DNA, MPI_COMM_WORLD);
+					MPI_Send(&bases[i * len], len, MPI_CHAR, i, TAG_DNA, MPI_COMM_WORLD);
 				}
+				result = bmhs(&bases[0], len, str, strlen(str));
+				if (result >= 0)
+					resultMin = min(result, resultMin);
+				int result_temp;
 				// MPI_Recv de todos
 				for (i = 1; i < np; i++) {
-					MPI_Recv(&result, 1, MPI_INT, i, TAG_ANSWER, MPI_COMM_WORLD, &status);
-					if (result >= 0)
-						resultMin = min(result, resultMin);
+					MPI_Recv(&result_temp, 1, MPI_INT, i, TAG_ANSWER, MPI_COMM_WORLD, &status);
+					if (result_temp >= 0)
+						resultMin = min(result_temp, resultMin);
 				}
 				if (resultMin != INT_MAX) {
 					fprintf(fout, "%s\n%d\n", desc_dna, resultMin);
@@ -264,7 +269,7 @@ int main(int argc, char** argv) {
 						MPI_Recv(&len, 1, MPI_INT, 0, TAG_SIZE, MPI_COMM_WORLD, &status);
 						MPI_Recv(bases, len, MPI_CHAR, 0, TAG_DNA, MPI_COMM_WORLD, &status);
 						//printf("%d - Recebeu base de tamanho %d: %s\n", my_rank, len, bases);
-						result = search(bases, strlen(bases), str, strlen(str));
+						result = bmhs(bases, strlen(bases), str, strlen(str));
 					
 						MPI_Send(&result, 1, MPI_INT, 0, TAG_ANSWER, MPI_COMM_WORLD);
 						//}
