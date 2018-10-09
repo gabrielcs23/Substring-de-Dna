@@ -3,6 +3,7 @@
 #include <string.h>
 #include <mpi.h>
 #include <limits.h>
+
 // MAX char table (ASCII)
 #define MAX 256
 
@@ -103,6 +104,7 @@ int main(int argc, char** argv){
     MPI_Init(&argc, &argv);						
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
+    double t1, t2;
 
 	bases = (char*) malloc(sizeof(char) * 1000001);
 	if (bases == NULL) {
@@ -183,7 +185,10 @@ int main(int argc, char** argv){
 					MPI_Send(&len, 1, MPI_INT, i, TAG_SIZE, MPI_COMM_WORLD);	// da sequencia de DNA referente para aquele processo
 					MPI_Send(&bases[(i * part_size) + offset], len, MPI_CHAR,	// O offset garante integridade do deslocamento no 
 					 i, TAG_DNA, MPI_COMM_WORLD);								// balanceamento de carga
-				}																
+				}
+
+				t1 = MPI_Wtime();
+
 				result = bmhs(&bases[0], part_size + (resto>0?1:0) + strlen(str) - 1, str, strlen(str));	// Chama a função bhms para a partição do mestre
 				
 				if (result >= 0)												// Se a função retorna uma posição,
@@ -200,10 +205,16 @@ int main(int argc, char** argv){
 						resultMin = min(result_temp, resultMin);										// Compara o resultado atual com o menor já achado
 					}
 				}
+
+				t2 = MPI_Wtime();
+
 				if (resultMin != INT_MAX) {										// Se o resultado no final != INT_MAX, significa
 					fprintf(fout, "%s\n%d\n", desc_dna, resultMin);				// achou a posição, então o mestre
 					found++;													// salva a resposta no arquivo de saída
-				}																
+				}
+
+				printf("Tempo para procura de %s numa entrada do banco = %f\n", str, t2 - t1);
+
 				resultMin = INT_MAX;											// Reseta o valor do resultado para a próxima base.
 			}
 
