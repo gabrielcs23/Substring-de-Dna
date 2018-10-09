@@ -145,12 +145,13 @@ int main(int argc, char** argv){
 			strcpy(desc_query, line);									// descrição do próximo query
 
 			// Ponto para chamar MPI_SEND de todos
-			len = strlen(str) +1;												// len + 1 para inclusão do '\0' do final da query
-			for(i = 1; i< np; i++ ){											// 
-				MPI_Send(&len, 1, MPI_INT, i, TAG_SIZE, MPI_COMM_WORLD);		// Envia o tamanho da query a ser recebida
-				MPI_Send(str, len, MPI_CHAR, i, TAG_QUERY, MPI_COMM_WORLD);		// por todos os processos e depois as próprias queries
-			}																	//
+			len = strlen(str) +1;											// len + 1 para inclusão do '\0' do final da query
+																			// 
+			MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);					// Envia o tamanho da query a ser recebida
+			MPI_Bcast(str, len, MPI_CHAR, 0, MPI_COMM_WORLD);				// por todos os processos e depois as próprias queries																	//
 			
+			
+
 			found = 0;															//
 			fseek(fdatabase, 0, SEEK_SET);										//
 			fgets(line, 100, fdatabase);										// Leitura da base de dados
@@ -228,8 +229,8 @@ int main(int argc, char** argv){
 			
 			while(more_query){															// Enquanto houverem queries
 
-				MPI_Recv(&len, 1, MPI_INT, 0, TAG_SIZE, MPI_COMM_WORLD, &status);		// Recebe o tamanho da query atual
-				MPI_Recv(str, len, MPI_CHAR, 0, TAG_QUERY, MPI_COMM_WORLD, &status);	// e a query em si
+				MPI_Bcast(&len, 1, MPI_INT, 0, MPI_COMM_WORLD);							// Recebe o tamanho da query atual
+				MPI_Bcast(str, len, MPI_CHAR, 0, MPI_COMM_WORLD);						// e a query em si
 
 				
 				MPI_Bcast(&more_bases, 1, MPI_INT, 0, MPI_COMM_WORLD);					// Verifica se o mestre enviará mais bases
