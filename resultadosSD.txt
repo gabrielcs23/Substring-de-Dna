@@ -1,0 +1,66 @@
+4 máquinas
+/*
+
+mpirun dna --hostsname hosts -np 8
+Tempo para achar query TATAGG na base 2 foi de: 0.000149
+Tempo gasto com a query TATAGG foi de: 0.028445
+Tempo para achar query TTTT na base 1 foi de: 0.000025
+Tempo para achar query TTTT na base 2 foi de: 0.000087
+Tempo gasto com a query TTTT foi de: 0.018541
+Não foi possível achar a query ATCG em nenhuma base. Tempo gasto com a query ATCG foi de: 0.002699
+Tempo para achar query AACTGG na base 1 foi de: 0.000013
+Tempo gasto com a query AACTGG foi de: 0.009799
+
+
+*/
+
+4 máquinas com slots=2
+
+/*
+
+mpirun dna --hostsname hosts -np 8
+Tempo para achar query TATAGG na base 2 foi de: 0.006648
+Tempo gasto com a query TATAGG foi de: 0.671064
+Tempo para achar query TTTT na base 1 foi de: 0.000017
+Tempo para achar query TTTT na base 2 foi de: 0.000037
+Tempo gasto com a query TTTT foi de: 0.008020
+Não foi possível achar a query ATCG em nenhuma base. Tempo gasto com a query ATCG foi de: 0.001779
+Tempo para achar query AACTGG na base 1 foi de: 0.000008
+Tempo gasto com a query AACTGG foi de: 0.004293
+
+
+*/
+
+4 máquinas com slots=1
+*/
+
+mpirun dna --hostsname hosts -np 4
+Tempo para achar query TATAGG na base 2 foi de: 0.000096
+Tempo gasto com a query TATAGG foi de: 0.011622
+Tempo para achar query TTTT na base 1 foi de: 0.000113
+Tempo para achar query TTTT na base 2 foi de: 0.000056
+Tempo gasto com a query TTTT foi de: 0.017267
+Não foi possível achar a query ATCG em nenhuma base. Tempo gasto com a query ATCG foi de: 0.008080
+Tempo para achar query AACTGG na base 1 foi de: 0.000052
+Tempo gasto com a query AACTGG foi de: 0.010470
+
+
+*/
+
+2 máquinas com slots=1
+/*
+
+mpirun dna --hostsname hosts -np 2
+Tempo para achar query TATAGG na base 2 foi de: 0.000120
+Tempo gasto com a query TATAGG foi de: 0.023363
+Tempo para achar query TTTT na base 1 foi de: 0.000019
+Tempo para achar query TTTT na base 2 foi de: 0.000067
+Tempo gasto com a query TTTT foi de: 0.014372
+Não foi possível achar a query ATCG em nenhuma base. Tempo gasto com a query ATCG foi de: 0.002212
+Tempo para achar query AACTGG na base 1 foi de: 0.000010
+Tempo gasto com a query AACTGG foi de: 0.007669
+
+*/
+
+minha máquina em casa
+

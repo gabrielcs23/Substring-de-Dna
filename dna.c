@@ -104,7 +104,8 @@ int main(int argc, char** argv){
     MPI_Init(&argc, &argv);						
     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
-    double t1, t2;
+    double t1, t2, t3;
+    int numBase;
 
 	bases = (char*) malloc(sizeof(char) * 1000001);
 	if (bases == NULL) {
@@ -129,6 +130,12 @@ int main(int argc, char** argv){
 		fgets(desc_query, 100, fquery);
 		remove_eol(desc_query);
 		while (!feof(fquery)) {
+			numBase = 0;
+
+			t1 = MPI_Wtime(); // Inicia o cronômetro
+			t3 = t1; // Armazena uma cópia para calcular o tempo de cada query
+
+
 			more_query = 1;												// Envia uma flag sinalizando para os processos
 			MPI_Bcast(&more_query, 1, MPI_INT, 0, MPI_COMM_WORLD);		// se vão receber mais substrings ou não
 			
@@ -159,6 +166,7 @@ int main(int argc, char** argv){
 			fgets(line, 100, fdatabase);										// Leitura da base de dados
 			remove_eol(line);
 			while (!feof(fdatabase)) {
+				numBase++;
 				more_bases = 1;													// Avisa para todos os outros processos que 
 				MPI_Bcast(&more_bases, 1, MPI_INT, 0, MPI_COMM_WORLD);			// ainda há bases de DNA para receberem
 
@@ -187,8 +195,6 @@ int main(int argc, char** argv){
 					 i, TAG_DNA, MPI_COMM_WORLD);								// balanceamento de carga
 				}
 
-				t1 = MPI_Wtime();
-
 				result = bmhs(&bases[0], part_size + (resto>0?1:0) + strlen(str) - 1, str, strlen(str));	// Chama a função bhms para a partição do mestre
 				
 				if (result >= 0)												// Se a função retorna uma posição,
@@ -206,14 +212,13 @@ int main(int argc, char** argv){
 					}
 				}
 
-				t2 = MPI_Wtime();
-
 				if (resultMin != INT_MAX) {										// Se o resultado no final != INT_MAX, significa
 					fprintf(fout, "%s\n%d\n", desc_dna, resultMin);				// achou a posição, então o mestre
 					found++;													// salva a resposta no arquivo de saída
+					t2 = MPI_Wtime(); // Para o cronômetro para cada base
+					printf("Tempo para achar query %s na base %d foi de: %f\n", str, numBase, (t2 - t1));
+					t1 = t2;
 				}
-
-				printf("Tempo para procura de %s numa entrada do banco = %f\n", str, t2 - t1);
 
 				resultMin = INT_MAX;											// Reseta o valor do resultado para a próxima base.
 			}
@@ -222,8 +227,16 @@ int main(int argc, char** argv){
 			MPI_Bcast(&more_bases, 1, MPI_INT, 0, MPI_COMM_WORLD);				// indicando que não há mais para receber
 
 
-			if (!found)
+			
+			t2 = MPI_Wtime(); // Para o cronômetro para cada query
+
+			if (!found) {
 				fprintf(fout, "NOT FOUND\n");
+				printf("Não foi possível achar a query %s em nenhuma base. ", str);
+			}
+
+			printf("Tempo gasto com a query %s foi de: %f\n", str, (t2 - t3)*1000);
+
 		}
 		more_query = 0;															// Quado acabam as queries, avisa para todos
 		MPI_Bcast(&more_query, 1, MPI_INT, 0, MPI_COMM_WORLD);					// que não há mais queries para receberem

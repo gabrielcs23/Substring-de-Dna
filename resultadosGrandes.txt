@@ -1,0 +1,46 @@
+4 máquinas slots=2
+/*
+mpirun dna --hostsname hosts -np 8
+Tempo para achar query TATAGG na base 2 foi de: 0.000218
+Tempo para achar query TATAGG na base 3 foi de: 0.000426
+Tempo para achar query TATAGG na base 4 foi de: 0.005692
+Tempo gasto com a query TATAGG foi de: 0.640808
+Tempo para achar query TTTT na base 1 foi de: 0.000016
+Tempo para achar query TTTT na base 2 foi de: 0.000075
+Tempo para achar query TTTT na base 3 foi de: 0.000291
+Tempo para achar query TTTT na base 4 foi de: 0.006370
+Tempo gasto com a query TTTT foi de: 0.683232
+Tempo para achar query ATCG na base 1 foi de: 0.000014
+Tempo para achar query ATCG na base 2 foi de: 0.000073
+Tempo para achar query ATCG na base 3 foi de: 0.000311
+Tempo para achar query ATCG na base 4 foi de: 0.005553
+Tempo gasto com a query ATCG foi de: 0.601272
+Tempo para achar query AACTGG na base 2 foi de: 0.000037
+Tempo para achar query AACTGG na base 3 foi de: 0.000302
+Tempo para achar query AACTGG na base 4 foi de: 0.005486
+Tempo gasto com a query AACTGG foi de: 0.588065
+*/
+
+4 máquinas slots=4
+
+/*
+mpirun dna --hostsname hosts -np 16
+Tempo para achar query TATAGG na base 2 foi de: 0.019727
+Tempo para achar query TATAGG na base 3 foi de: 0.000385
+Tempo para achar query TATAGG na base 4 foi de: 0.005622
+Tempo gasto com a query TATAGG foi de: 2.575465
+Tempo para achar query TTTT na base 1 foi de: 0.000015
+Tempo para achar query TTTT na base 2 foi de: 0.000042
+Tempo para achar query TTTT na base 3 foi de: 0.000263
+Tempo para achar query TTTT na base 4 foi de: 0.006595
+Tempo gasto com a query TTTT foi de: 0.693269
+Tempo para achar query ATCG na base 1 foi de: 0.000045
+Tempo para achar query ATCG na base 2 foi de: 0.000055
+Tempo para achar query ATCG na base 3 foi de: 0.000280
+Tempo para achar query ATCG na base 4 foi de: 0.005487
+Tempo gasto com a query ATCG foi de: 0.587846
+Tempo para achar query AACTGG na base 2 foi de: 0.000062
+Tempo para achar query AACTGG na base 3 foi de: 0.000274
+Tempo para achar query AACTGG na base 4 foi de: 0.005569
+Tempo gasto com a query AACTGG foi de: 0.591537
+*/
