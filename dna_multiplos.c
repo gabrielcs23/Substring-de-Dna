@@ -42,7 +42,7 @@ FILE *fdatabase, *fquery, *fout;
 
 void openfiles() {
 
-	fdatabase = fopen("dna.in", "r");
+	fdatabase = fopen("dna_sd.in", "r");
 	if (fdatabase == NULL) {
 		perror("dna.in");
 		exit(EXIT_FAILURE);
@@ -195,14 +195,16 @@ int main(int argc, char** argv){
 				int *vet = (int *)malloc(sizeof(int));
 				int tam = 0;
 				vet[tam] = result;
+				//if (result != -1) printf("%d - result found: %d\n", my_rank, result);
+				//else printf("%d - no result found\n", my_rank);
 				while (result != -1) {
 					//printf("%d - result found: %d\n", my_rank, result);
 					int new_result = bmhs(&bases[result + 1], part_size + (resto>0?1:0) + strlen(str) - 1 - (result + 1), str, strlen(str));
 					tam++;
 					vet = (int *) realloc(vet, (tam + 1) * sizeof(int));
-					printf("%d- found in %d, old result was %d,", my_rank, new_result, result);
+					//printf("%d- found in %d, old result was %d,", my_rank, new_result, result);
 					result = (new_result == -1 ? -1 : new_result + result + 1);
-					printf(" new result vallue is %d\n", result);
+					//printf(" new result vallue is %d\n", result);
 					vet[tam] = result;
 				}
 
@@ -212,7 +214,9 @@ int main(int argc, char** argv){
 				int result_temp;*/												// anteriormente
 				int num_result;
 
+				//printf("Started receiving the answers...\n");
 				for (i = 1; i < np; i++) {																// O mestre então recebe de cada processo
+					//printf("Iteration %d - adjustment value is %d\n", i, i * part_size + (i<resto?1:0));
 					MPI_Recv(&num_result, 1, MPI_INT, i, TAG_NUMBER, MPI_COMM_WORLD, &status);
 					if (num_result > 0) {
 						//tam += num_result;
@@ -221,7 +225,8 @@ int main(int argc, char** argv){
 						MPI_Recv(&vet[tam + 1], num_result, MPI_INT, i, TAG_ANSWER, MPI_COMM_WORLD, &status);			// resultado na posição relativa, e então
 						//printf("MASTER - after receive\n");
 						for (j = tam + 1; j < tam + num_result + 1; j++) {
-							//if (result_vet[j] >= 0){																// calcula a posição absoluta
+							//printf("Iteration %d - answer number %d = %d\n", i, j, vet[j]);
+							//if (vet[j] != -1) {
 							vet[j] += i * part_size;													// 
 							if (i < resto) vet[j] += i;												// 
 							else vet[j] += resto;														// Ajusta o valor da posição por conta do balanceamento
@@ -229,6 +234,7 @@ int main(int argc, char** argv){
 						}
 						tam += num_result;
 					}
+					//else printf("Iteration %d - no answer found\n", i);
 				}
 
 				t2 = MPI_Wtime();
@@ -284,20 +290,21 @@ int main(int argc, char** argv){
 					int *vet = (int *)malloc(sizeof(int));
 					int tam = 0;
 					vet[tam] = result;
+					//if (result != -1) printf("%d - result found: %d\n", my_rank, result);
+					//else printf("%d - no result found\n", my_rank);
 					while (result != -1) {
-						//printf("%d - result found: %d\n", my_rank, result);
 						int new_result = bmhs(&bases[result + 1], strlen(&bases[result + 1]), str, strlen(str));
 						tam++;
 						vet = (int *) realloc(vet, (tam + 1) * sizeof(int));
-						printf("%d- found in %d, old result was %d,", my_rank, new_result, result);
+						//printf("%d- found in %d, old result was %d,", my_rank, new_result, result);
 						result = (new_result == -1 ? -1 : new_result + result + 1);
-						printf(" new result vallue is %d\n", result);
+						//printf(" new result vallue is %d\n", result);
 						vet[tam] = result;
 					}
 				
 					MPI_Send(&tam, 1, MPI_INT, 0, TAG_NUMBER, MPI_COMM_WORLD);
 
-					if (tam > 0) MPI_Send(&result, tam, MPI_INT, 0, TAG_ANSWER, MPI_COMM_WORLD);		// Envia o resultado de volta para o mestre
+					if (tam > 0) MPI_Send(vet, tam, MPI_INT, 0, TAG_ANSWER, MPI_COMM_WORLD);		// Envia o resultado de volta para o mestre
 					MPI_Bcast(&more_bases, 1, MPI_INT, 0, MPI_COMM_WORLD);				// Verifica novamente se há mais bases para receber
 				}
 
