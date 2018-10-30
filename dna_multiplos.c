@@ -42,7 +42,7 @@ FILE *fdatabase, *fquery, *fout;
 
 void openfiles() {
 
-	fdatabase = fopen("dna_sd.in", "r");
+	fdatabase = fopen("dna.in", "r");
 	if (fdatabase == NULL) {
 		perror("dna.in");
 		exit(EXIT_FAILURE);
@@ -136,6 +136,7 @@ int main(int argc, char** argv){
 			t1 = MPI_Wtime(); // Inicia o cronômetro
 			t3 = t1; // Armazena uma cópia para calcular o tempo de cada query
 
+
 			more_query = 1;												// Envia uma flag sinalizando para os processos
 			MPI_Bcast(&more_query, 1, MPI_INT, 0, MPI_COMM_WORLD);		// se vão receber mais substrings ou não
 			
@@ -200,16 +201,11 @@ int main(int argc, char** argv){
 				int *vet = (int *)malloc(sizeof(int));
 				int tam = 0;
 				vet[tam] = result;
-				//if (result != -1) printf("%d - result found: %d\n", my_rank, result);
-				//else printf("%d - no result found\n", my_rank);
 				while (result != -1) {
-					//printf("%d - result found: %d\n", my_rank, result);
 					int new_result = bmhs(&bases[result + 1], part_size + (resto>0?1:0) + strlen(str) - 1 - (result + 1), str, strlen(str));
 					tam++;
 					vet = (int *) realloc(vet, (tam + 1) * sizeof(int));
-					//printf("%d- found in %d, old result was %d,", my_rank, new_result, result);
 					result = (new_result == -1 ? -1 : new_result + result + 1);
-					//printf(" new result vallue is %d\n", result);
 					vet[tam] = result;
 				}
 
@@ -219,18 +215,13 @@ int main(int argc, char** argv){
 				int result_temp;*/												// anteriormente
 				int num_result;
 
-				//printf("Started receiving the answers...\n");
 				for (i = 1; i < np; i++) {																// O mestre então recebe de cada processo
-					//printf("Iteration %d - adjustment value is %d\n", i, i * part_size + (i<resto?1:0));
 					MPI_Recv(&num_result, 1, MPI_INT, i, TAG_NUMBER, MPI_COMM_WORLD, &status);
 					if (num_result > 0) {
 						//tam += num_result;
 						vet = (int *) realloc(vet, (tam + num_result + 1) * sizeof(int));
-						//printf("MASTER - before receive\n");
 						MPI_Recv(&vet[tam + 1], num_result, MPI_INT, i, TAG_ANSWER, MPI_COMM_WORLD, &status);			// resultado na posição relativa, e então
-						//printf("MASTER - after receive\n");
 						for (j = tam + 1; j < tam + num_result + 1; j++) {
-							//printf("Iteration %d - answer number %d = %d\n", i, j, vet[j]);
 							//if (vet[j] != -1) {
 							vet[j] += i * part_size;													// 
 							if (i < resto) vet[j] += i;												// 
@@ -239,7 +230,6 @@ int main(int argc, char** argv){
 						}
 						tam += num_result;
 					}
-					//else printf("Iteration %d - no answer found\n", i);
 				}
 
 				t2 = MPI_Wtime();
@@ -251,7 +241,7 @@ int main(int argc, char** argv){
 					fprintf(fout, "\n");
 					found++;													// salva a resposta no arquivo de saída
 					t2 = MPI_Wtime(); // Para o cronômetro para cada base
-					printf("Tempo para achar query %s na base %d foi de: %f\n", str, numBase, (t2 - t1));
+					printf("Tempo para achar query %s na base %d foi de: %f\n", str, numBase, (t2 - t1) * 1000);
 					t1 = t2;
 				}
 
@@ -303,15 +293,11 @@ int main(int argc, char** argv){
 					int *vet = (int *)malloc(sizeof(int));
 					int tam = 0;
 					vet[tam] = result;
-					//if (result != -1) printf("%d - result found: %d\n", my_rank, result);
-					//else printf("%d - no result found\n", my_rank);
 					while (result != -1) {
 						int new_result = bmhs(&bases[result + 1], strlen(&bases[result + 1]), str, strlen(str));
 						tam++;
 						vet = (int *) realloc(vet, (tam + 1) * sizeof(int));
-						//printf("%d- found in %d, old result was %d,", my_rank, new_result, result);
 						result = (new_result == -1 ? -1 : new_result + result + 1);
-						//printf(" new result vallue is %d\n", result);
 						vet[tam] = result;
 					}
 				
