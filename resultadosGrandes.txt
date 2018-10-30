@@ -44,3 +44,27 @@ Tempo para achar query AACTGG na base 3 foi de: 0.000274
 Tempo para achar query AACTGG na base 4 foi de: 0.005569
 Tempo gasto com a query AACTGG foi de: 0.591537
 */
+
+1 máquina
+/*
+mpirun dna -np 8
+Tempo para achar query TATA na base 1 foi de: 0.152495
+Tempo para achar query TATA na base 2 foi de: 0.198497
+Tempo para achar query TATA na base 3 foi de: 0.571247
+Tempo para achar query TATA na base 4 foi de: 6.590659
+Tempo gasto com a query TATA foi de: 7.527395
+Tempo para achar query TTTT na base 1 foi de: 0.101849
+Tempo para achar query TTTT na base 2 foi de: 0.056651
+Tempo para achar query TTTT na base 3 foi de: 0.240696
+Tempo para achar query TTTT na base 4 foi de: 5.424285
+Tempo gasto com a query TTTT foi de: 5.828037
+Tempo para achar query ATCG na base 1 foi de: 0.067765
+Tempo para achar query ATCG na base 2 foi de: 0.028465
+Tempo para achar query ATCG na base 3 foi de: 0.244455
+Tempo para achar query ATCG na base 4 foi de: 5.421086
+Tempo gasto com a query ATCG foi de: 5.766231
+Tempo para achar query AACTGG na base 2 foi de: 0.062633
+Tempo para achar query AACTGG na base 3 foi de: 0.247243
+Tempo para achar query AACTGG na base 4 foi de: 5.456374
+Tempo gasto com a query AACTGG foi de: 5.770702
+*/
