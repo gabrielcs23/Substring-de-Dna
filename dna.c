@@ -216,7 +216,7 @@ int main(int argc, char** argv){
 					fprintf(fout, "%s\n%d\n", desc_dna, resultMin);				// achou a posição, então o mestre
 					found++;													// salva a resposta no arquivo de saída
 					t2 = MPI_Wtime(); // Para o cronômetro para cada base
-					printf("Tempo para achar query %s na base %d foi de: %f\n", str, numBase, (t2 - t1));
+					printf("Tempo para achar query %s na base %d foi de: %f\n", str, numBase, (t2 - t1) * 1000);
 					t1 = t2;
 				}
 
