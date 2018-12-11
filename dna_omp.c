@@ -7,6 +7,8 @@
 // MAX char table (ASCII)
 #define MAX 256
 
+#define NUMTHREADS 4
+
 // Boyers-Moore-Hospool-Sunday algorithm for string matching
 int bmhs(char *string, int n, char *substr, int m) {
 
@@ -83,8 +85,6 @@ char *bases;
 char *str;
 
 int main(int argv, char* args) {
-	int numThreads = (int)args[1];
-	omp_set_num_threads(numThreads);
 	bases = (char*) malloc(sizeof(char) * 1000001);
 	if (bases == NULL) {
 		perror("malloc");
@@ -139,10 +139,10 @@ int main(int argv, char* args) {
 				i += 80;
 			} while (line[0] != '>');
 
-			int part_size = strlen(bases)/numThreads; // poderiamos usar omp_get_num_threads na divisão porém isso já temos esse valor como parâmetro
-			int resto = strlen(bases)%numThreads;
+			int part_size = strlen(bases)/NUMTHREADS; // poderiamos usar omp_get_num_threads na divisão porém isso já temos esse valor como parâmetro
+			int resto = strlen(bases)%NUMTHREADS;
 
-			#pragma omp parallel reduction(+:found)
+			#pragma omp parallel
 			{
 				int len, id, offset, result_temp;
 
@@ -151,24 +151,47 @@ int main(int argv, char* args) {
 				if (id < resto) len++;
 				offset = id < resto ? id : resto;		
 
-				// char* base_local = (char*) malloc(sizeof(char) * 1000001);
-				// strcpy(base_local, &bases[(i * part_size) + offset]);
-				// strcat(base_local, '\0');
+				/*char* base_local = (char*) malloc(sizeof(char) * 1000001);
+				strcpy(base_local, &bases[(i * part_size) + offset]);
+				strcat(base_local, '\0');*/
 
 				/*int j;for(j=(id * part_size) + offset; j<len;j++){printf("%c", bases[j]);}printf("\n");*/
 				result_temp = bmhs(&bases[(id * part_size) + offset], len, str, strlen(str));
+				// printf("%d - base = %c - result_temp = %d\n", id, bases[(id * part_size) + offset], result_temp);
 
-				
-				if (result_temp > -1) {
-					result_temp += id * part_size;
-					if (id < resto) result_temp += id;
-					else result_temp += resto;
+				int *vet = (int *)malloc(sizeof(int));
+				int tam = 0;
+				vet[tam] = result_temp;
+				while (result_temp != -1) {
+					printf("result_temp = %d, %c, proximoChar = %c\n", result_temp, bases[result_temp], bases[result_temp + 1]);
+					int new_result = bmhs(&bases[result_temp + 1], len - result_temp, str, strlen(str));
+					// printf("\t%d - multiplos = %c, new_result = %d\n", id, bases[result_temp + 1], new_result);
+					tam++;
+					vet = (int *) realloc(vet, (tam + 1) * sizeof(int));
+					// result_temp = (new_result == -1 ? -1 : new_result + result_temp + 1);
+					result_temp = new_result;
+					vet[tam] = result_temp;
+				}
 
-					result = result_temp;
-					printf("%d - RESULT_TEMP = %d\n", id, result_temp);
-					#pragma omp critical
-					fprintf(fout, "%s\n%d\n", desc_dna, result);
-					found++;
+				/*if (result_temp != -1)
+				printf("tam = %d\n", tam+1);*/
+
+				int j;
+				for(j = 0; j <= tam; j++) {
+					if (vet[j] != -1) {
+						if (id != 0){
+							vet[j] += id * part_size;
+							if (id < resto) vet[j] += id;
+							else vet[j] += resto;
+						}
+
+						// printf("%d - RESULT_TEMP = %d\n", id, vet[j]);
+						#pragma omp critical
+						{
+							fprintf(fout, "%s\n%d\n", desc_dna, vet[j]);
+							found++;
+						}
+					}
 				}
 				
 			
