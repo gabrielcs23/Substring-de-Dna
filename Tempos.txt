@@ -1,0 +1,65 @@
+================= EXECUÇÃO 01 ====================
+
+Tempo para achar query TATA na base 1 foi de: 0.483175
+Tempo para achar query TATA na base 2 foi de: 0.087009
+Tempo para achar query TATA na base 3 foi de: 0.609273
+Tempo para achar query TATA na base 4 foi de: 11.715183
+Tempo gasto com a query TATA foi de: 12.900354
+Tempo para achar query TTTT na base 1 foi de: 0.030680
+Tempo para achar query TTTT na base 2 foi de: 0.026847
+Tempo para achar query TTTT na base 3 foi de: 0.244656
+Tempo para achar query TTTT na base 4 foi de: 5.272617
+Tempo gasto com a query TTTT foi de: 5.578383
+Tempo para achar query ATCG na base 1 foi de: 0.030264
+Tempo para achar query ATCG na base 2 foi de: 0.027373
+Tempo para achar query ATCG na base 3 foi de: 0.248713
+Tempo para achar query ATCG na base 4 foi de: 5.434332
+Tempo gasto com a query ATCG foi de: 5.744446
+Tempo para achar query AACTGG na base 2 foi de: 0.024217
+Tempo para achar query AACTGG na base 3 foi de: 1.437552
+Tempo para achar query AACTGG na base 4 foi de: 8.330300
+Tempo gasto com a query AACTGG foi de: 9.830435
+
+================= EXECUÇÃO 02 ====================
+
+Tempo para achar query TATA na base 1 foi de: 10.608053
+Tempo para achar query TATA na base 2 foi de: 0.056214
+Tempo para achar query TATA na base 3 foi de: 0.277964
+Tempo para achar query TATA na base 4 foi de: 5.797392
+Tempo gasto com a query TATA foi de: 16.784345
+Tempo para achar query TTTT na base 1 foi de: 0.010071
+Tempo para achar query TTTT na base 2 foi de: 0.053337
+Tempo para achar query TTTT na base 3 foi de: 0.276833
+Tempo para achar query TTTT na base 4 foi de: 5.337701
+Tempo gasto com a query TTTT foi de: 5.710545
+Tempo para achar query ATCG na base 1 foi de: 0.008793
+Tempo para achar query ATCG na base 2 foi de: 0.053386
+Tempo para achar query ATCG na base 3 foi de: 0.276095
+Tempo para achar query ATCG na base 4 foi de: 5.391729
+Tempo gasto com a query ATCG foi de: 5.739362
+Tempo para achar query AACTGG na base 2 foi de: 0.024237
+Tempo para achar query AACTGG na base 3 foi de: 0.278103
+Tempo para achar query AACTGG na base 4 foi de: 5.336669
+Tempo gasto com a query AACTGG foi de: 5.664277
+
+================= EXECUÇÃO 03 ====================
+
+Tempo para achar query TATA na base 1 foi de: 0.728127
+Tempo para achar query TATA na base 2 foi de: 0.055940
+Tempo para achar query TATA na base 3 foi de: 0.400027
+Tempo para achar query TATA na base 4 foi de: 13.074571
+Tempo gasto com a query TATA foi de: 14.271167
+Tempo para achar query TTTT na base 1 foi de: 3.984130
+Tempo para achar query TTTT na base 2 foi de: 14.578859
+Tempo para achar query TTTT na base 3 foi de: 10.643155
+Tempo para achar query TTTT na base 4 foi de: 5.648754
+Tempo gasto com a query TTTT foi de: 34.864273
+Tempo para achar query ATCG na base 1 foi de: 0.009824
+Tempo para achar query ATCG na base 2 foi de: 0.025941
+Tempo para achar query ATCG na base 3 foi de: 0.256940
+Tempo para achar query ATCG na base 4 foi de: 5.355206
+Tempo gasto com a query ATCG foi de: 5.652017
+Tempo para achar query AACTGG na base 2 foi de: 0.024665
+Tempo para achar query AACTGG na base 3 foi de: 0.277368
+Tempo para achar query AACTGG na base 4 foi de: 5.302536
+Tempo gasto com a query AACTGG foi de: 5.912108
