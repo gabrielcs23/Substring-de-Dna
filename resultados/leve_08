@@ -1,0 +1,47 @@
+================= EXECUÇÃO 01 ====================
+
+Numero de threads = 4
+Tempo para procurar query TATA na base 1 foi de: 0.139133
+Tempo para procurar query TATA na base 2 foi de: 0.013845
+Tempo gasto com a query TATA foi de: 0.155400
+Tempo para procurar query TTTT na base 1 foi de: 0.006970
+Tempo para procurar query TTTT na base 2 foi de: 0.008623
+Tempo gasto com a query TTTT foi de: 0.017565
+Tempo para procurar query ATCG na base 1 foi de: 0.003699
+Tempo para procurar query ATCG na base 2 foi de: 0.004897
+Tempo gasto com a query ATCG foi de: 0.010450
+Tempo para procurar query AACTGG na base 1 foi de: 0.004468
+Tempo para procurar query AACTGG na base 2 foi de: 0.004573
+Tempo gasto com a query AACTGG foi de: 0.010865
+
+================= EXECUÇÃO 02 ====================
+
+Numero de threads = 8
+Tempo para procurar query TATA na base 1 foi de: 0.534511
+Tempo para procurar query TATA na base 2 foi de: 0.122778
+Tempo gasto com a query TATA foi de: 0.673025
+Tempo para procurar query TTTT na base 1 foi de: 0.120411
+Tempo para procurar query TTTT na base 2 foi de: 0.071468
+Tempo gasto com a query TTTT foi de: 0.203386
+Tempo para procurar query ATCG na base 1 foi de: 0.052631
+Tempo para procurar query ATCG na base 2 foi de: 0.054837
+Tempo gasto com a query ATCG foi de: 0.118878
+Tempo para procurar query AACTGG na base 1 foi de: 0.039152
+Tempo para procurar query AACTGG na base 2 foi de: 0.044455
+Tempo gasto com a query AACTGG foi de: 0.089342
+
+================= EXECUÇÃO 03 ====================
+
+Numero de threads = 8
+Tempo para procurar query TATA na base 1 foi de: 0.431727
+Tempo para procurar query TATA na base 2 foi de: 0.090661
+Tempo gasto com a query TATA foi de: 0.531090
+Tempo para procurar query TTTT na base 1 foi de: 0.049118
+Tempo para procurar query TTTT na base 2 foi de: 0.076610
+Tempo gasto com a query TTTT foi de: 0.132368
+Tempo para procurar query ATCG na base 1 foi de: 0.052948
+Tempo para procurar query ATCG na base 2 foi de: 0.060586
+Tempo gasto com a query ATCG foi de: 0.119113
+Tempo para procurar query AACTGG na base 1 foi de: 0.039395
+Tempo para procurar query AACTGG na base 2 foi de: 0.040149
+Tempo gasto com a query AACTGG foi de: 0.083755

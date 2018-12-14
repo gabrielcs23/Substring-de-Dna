@@ -1,0 +1,23 @@
+================= EXECUÇÃO 01 ===================
+
+Numero de threads = 16
+Tempo para procurar query TATA na base 1 foi de: 0.752595
+Tempo para procurar query TATA na base 2 foi de: 0.169746
+Tempo para procurar query TATA na base 3 foi de: 0.720308
+Falha de segmentação (imagem do núcleo gravada)
+
+================= EXECUÇÃO 02 ===================
+
+Numero de threads = 16
+Tempo para procurar query TATA na base 1 foi de: 0.867825
+Tempo para procurar query TATA na base 2 foi de: 0.087110
+Tempo para procurar query TATA na base 3 foi de: 0.530153
+Falha de segmentação (imagem do núcleo gravada)
+
+================= EXECUÇÃO 03 ===================
+
+Numero de threads = 16
+Tempo para procurar query TATA na base 1 foi de: 0.740177
+Tempo para procurar query TATA na base 2 foi de: 0.101541
+Tempo para procurar query TATA na base 3 foi de: 0.465529
+Falha de segmentação (imagem do núcleo gravada)
