@@ -98,6 +98,8 @@ int main(int argv, char* args) {
 
 	openfiles();
 
+	omp_set_num_threads(NUMTHREADS);
+
 	char desc_dna[100], desc_query[100];
 	char line[100];
 	int i, result=INT_MAX, found;
@@ -151,30 +153,30 @@ int main(int argv, char* args) {
 				if (id < resto) len++;
 				offset = id < resto ? id : resto;		
 
-				/*char* base_local = (char*) malloc(sizeof(char) * 1000001);
-				strcpy(base_local, &bases[(i * part_size) + offset]);
-				strcat(base_local, '\0');*/
-
-				/*int j;for(j=(id * part_size) + offset; j<len;j++){printf("%c", bases[j]);}printf("\n");*/
 				result_temp = bmhs(&bases[(id * part_size) + offset], len, str, strlen(str));
-				// printf("%d - base = %c - result_temp = %d\n", id, bases[(id * part_size) + offset], result_temp);
 
 				int *vet = (int *)malloc(sizeof(int));
 				int tam = 0;
 				vet[tam] = result_temp;
+				len = len - result_temp - 1;
 				while (result_temp != -1) {
-					printf("result_temp = %d, %c, proximoChar = %c\n", result_temp, bases[result_temp], bases[result_temp + 1]);
-					int new_result = bmhs(&bases[result_temp + 1], len - result_temp, str, strlen(str));
-					// printf("\t%d - multiplos = %c, new_result = %d\n", id, bases[result_temp + 1], new_result);
+
+					int pos_abs = result_temp;
+
+					if (id != 0){
+						pos_abs += id * part_size;
+						if (id < resto) pos_abs += id;
+						else pos_abs += resto;
+					}
+
+
+					int new_result = bmhs(&bases[pos_abs + 1], len, str, strlen(str));
 					tam++;
 					vet = (int *) realloc(vet, (tam + 1) * sizeof(int));
-					// result_temp = (new_result == -1 ? -1 : new_result + result_temp + 1);
-					result_temp = new_result;
+					result_temp = (new_result == -1 ? -1 : new_result + result_temp + 1);
 					vet[tam] = result_temp;
+					len = len - result_temp - 1;
 				}
-
-				/*if (result_temp != -1)
-				printf("tam = %d\n", tam+1);*/
 
 				int j;
 				for(j = 0; j <= tam; j++) {
@@ -185,7 +187,6 @@ int main(int argv, char* args) {
 							else vet[j] += resto;
 						}
 
-						// printf("%d - RESULT_TEMP = %d\n", id, vet[j]);
 						#pragma omp critical
 						{
 							fprintf(fout, "%s\n%d\n", desc_dna, vet[j]);
@@ -196,12 +197,6 @@ int main(int argv, char* args) {
 				
 			
 			}
-
-			//printf("RESULT = %d\n", result);
-			/* if (result != INT_MAX) {
-				fprintf(fout, "%s\n%d\n", desc_dna, result);
-				found++;
-			}*/
 
 		}
 
