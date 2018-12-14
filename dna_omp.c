@@ -85,6 +85,9 @@ char *bases;
 char *str;
 
 int main(int argv, char* args) {
+
+	double t1, t2, t3;
+
 	bases = (char*) malloc(sizeof(char) * 1000001);
 	if (bases == NULL) {
 		perror("malloc");
@@ -102,11 +105,15 @@ int main(int argv, char* args) {
 
 	char desc_dna[100], desc_query[100];
 	char line[100];
-	int i, result=INT_MAX, found;
+	int i, result=INT_MAX, found, numBase;
 
 	fgets(desc_query, 100, fquery);
 	remove_eol(desc_query);
 	while (!feof(fquery)) {
+		numBase = 0;
+		t1 = omp_get_wtime(); // Inicia o cronômetro
+		t3 = t1; // Armazena uma cópia para calcular o tempo de cada query
+
 		fprintf(fout, "%s\n", desc_query);
 		// read query string
 		fgets(line, 100, fquery);
@@ -128,6 +135,7 @@ int main(int argv, char* args) {
 		fgets(line, 100, fdatabase);
 		remove_eol(line);
 		while (!feof(fdatabase)) {
+			numBase++;
 			strcpy(desc_dna, line);
 			bases[0] = 0;
 			i = 0;
@@ -194,14 +202,22 @@ int main(int argv, char* args) {
 						}
 					}
 				}
-				
 			
 			}
 
+			t2 = omp_get_wtime(); // Para o cronômetro para cada base
+			if (found)
+				printf("Tempo para achar query %s na base %d foi de: %f\n", str, numBase, (t2 - t1) * 1000);
+			t1 = t2;
+
 		}
+
+		t2 = omp_get_wtime();
 
 		if (!found)
 			fprintf(fout, "NOT FOUND\n");
+
+		printf("Tempo gasto com a query %s foi de: %f\n", str, (t2 - t3)*1000);
 	}
 
 	closefiles();
