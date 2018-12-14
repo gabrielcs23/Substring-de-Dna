@@ -84,7 +84,7 @@ void remove_eol(char *line) {
 char *bases;
 char *str;
 
-int main(int argv, char* args) {
+int main(int argv, char* args[]) {
 
 	double t1, t2, t3;
 
@@ -101,7 +101,10 @@ int main(int argv, char* args) {
 
 	openfiles();
 
-	omp_set_num_threads(NUMTHREADS);
+	int n_threads = (argv == 2 ? atoi(args[1]) : NUMTHREADS);
+	printf("Numero de threads = %d\n", n_threads);
+
+	omp_set_num_threads(n_threads);
 
 	char desc_dna[100], desc_query[100];
 	char line[100];
@@ -206,8 +209,8 @@ int main(int argv, char* args) {
 			}
 
 			t2 = omp_get_wtime(); // Para o cronômetro para cada base
-			if (found)
-				printf("Tempo para achar query %s na base %d foi de: %f\n", str, numBase, (t2 - t1) * 1000);
+			//if (found)
+			printf("Tempo para procurar query %s na base %d foi de: %f\n", str, numBase, (t2 - t1) * 1000);
 			t1 = t2;
 
 		}
