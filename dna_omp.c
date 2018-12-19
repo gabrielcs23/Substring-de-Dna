@@ -152,8 +152,8 @@ int main(int argv, char* args[]) {
 				i += 80;
 			} while (line[0] != '>');
 
-			int part_size = strlen(bases)/NUMTHREADS; // poderiamos usar omp_get_num_threads na divisão porém isso já temos esse valor como parâmetro
-			int resto = strlen(bases)%NUMTHREADS;
+			int part_size = strlen(bases)/n_threads;
+			int resto = strlen(bases)%n_threads;
 
 			#pragma omp parallel
 			{
